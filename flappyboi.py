@@ -1,6 +1,5 @@
 import arcade
 import numpy as np
-from arcade import draw_commands as dc
 import flappyengine
 
 ####------------CONSTANTS-------------####
@@ -22,7 +21,7 @@ class Bird:
         # x, y positions on the screen
         self.x = screen_width / 2.0
         self.y = screen_height / 2.0
-        
+
         # flag for whether or not Player has tapped
         self.jumped = False
         self.flapped = False
@@ -35,23 +34,23 @@ class Bird:
 
         # visual attributes
         self.radius = 80
-        self.texture = dc.load_texture("/home/bacon/code/python_toys/flappy/flappyengine/FlappyBirdStyleAssets/Sprites/birb.png")
+        self.texture = arcade.texture.load_texture("/home/bacon/code/python_toys/flappy/flappyengine/FlappyBirdStyleAssets/Sprites/birb.png")
         self.texture_flapped = self.texture
 
-        #self.texture = dc.load_texture("/home/bacon/code/python_toys/flappy/flappyengine/FlappyBirdStyleAssets/Sprites/BirdResting.png")
-        #self.texture_flapped = dc.load_texture("/home/bacon/code/python_toys/flappy/flappyengine/FlappyBirdStyleAssets/Sprites/BirdFlapped.png")
+        self.texture = arcade.texture.load_texture("/home/bacon/code/python_toys/flappy/flappyengine/FlappyBirdStyleAssets/Sprites/BirdResting.png")
+        self.texture_flapped = arcade.texture.load_texture("/home/bacon/code/python_toys/flappy/flappyengine/FlappyBirdStyleAssets/Sprites/BirdFlapped.png")
 
     def update(self):
 
         if(self.jumped == True):
-            # resets y velocity - FLAP 
+            # resets y velocity - FLAP
             self.vel_y = self.jump_vel
             self.jumped = False
 
         else:
             # bird is still in free fall
             self.vel_y = self.vel_y - GRAVITY * DELTA_TIME
-        
+
         # updates the position of the bird
         self.y = self.y + self.vel_y
 
@@ -83,8 +82,9 @@ class Pillar:
         # the score
         self.passed = False
 
-        self.texture_bottom = dc.load_texture("/home/bacon/code/python_toys/flappy/flappyengine/FlappyBirdStyleAssets/Sprites/ColumnSprite.png")
-        self.texture_top = dc.load_texture("/home/bacon/code/python_toys/flappy/flappyengine/FlappyBirdStyleAssets/Sprites/ColumnSprite.png", flipped = True)
+        # setting images for pillar
+        self.texture_bottom = arcade.texture.load_texture("/home/bacon/code/python_toys/flappy/flappyengine/FlappyBirdStyleAssets/Sprites/ColumnSprite.png")
+        self.texture_top = arcade.texture.load_texture("/home/bacon/code/python_toys/flappy/flappyengine/FlappyBirdStyleAssets/Sprites/ColumnSprite.png", flipped_vertically = True)
         self.ground_height = 1/7*screen_height
 
     def update(self):
@@ -104,10 +104,10 @@ class Pillar:
 
                 # randomize where the gap is
                 rn = screen_height * np.random.rand(1)
-                
+
                 while rn <= self.gap_height/2 + self.ground_height + 10:
                     rn = screen_height * np.random.rand(1)
-                
+
                 while rn  >= screen_height - self.gap_height/2 - 1:
                     rn = screen_height * np.random.rand(1)
 
@@ -123,7 +123,7 @@ class Game(arcade.Window):
     def __init__(self):
         # inii tialize the game objects
         self.pillars = None
-        
+
         # initialize a bird
         self.bird = None
 
@@ -136,19 +136,20 @@ class Game(arcade.Window):
         # keep track of score
         self.score = 0
 
-        self.ground = dc.load_texture("/home/bacon/code/python_toys/flappy/flappyengine/FlappyBirdStyleAssets/Sprites/GrassThinSprite.png")
-        self.sky = dc.load_texture("/home/bacon/code/python_toys/flappy/flappyengine/FlappyBirdStyleAssets/Sprites/SkyTileSprite.png")
+        # images for background
+        self.ground = arcade.texture.load_texture("/home/bacon/code/python_toys/flappy/flappyengine/FlappyBirdStyleAssets/Sprites/GrassThinSprite.png")
+        self.sky = arcade.texture.load_texture("/home/bacon/code/python_toys/flappy/flappyengine/FlappyBirdStyleAssets/Sprites/SkyTileSprite.png")
 
     def setup(self):
         # initialize the game objects
-        self.pillars = [Pillar(0.8 * screen_width), Pillar(screen_width), Pillar(1.4 * screen_width)] 
+        self.pillars = [Pillar(0.8 * screen_width), Pillar(screen_width), Pillar(1.4 * screen_width)]
 
         # initialize a bird
         self.bird = Bird()
 
         # reset score to zero
         self.score = 0
-        
+
 
     def on_key_press(self, key, modifiers):
         self.bird.jumped = True
@@ -159,7 +160,7 @@ class Game(arcade.Window):
         # check for collision with pillars and if we've passed a pillar
         for i in range(len(self.pillars)):
             if (self.pillars[i].x < self.bird.x) and (self.bird.x < self.pillars[i].x + self.pillars[i].width):
-                
+
                 if (self.pillars[i].gap - self.pillars[i].gap_height/2 < self.bird.y) and (self.bird.y < self.pillars[i].gap + self.pillars[i].gap_height/2):
                     self.pillars[i].passed = True
 
@@ -168,8 +169,9 @@ class Game(arcade.Window):
                     # end game, restart
                     self.setup()
 
+            # changes the score if we've successfully gone through a pillar
             if (self.pillars[i].x + self.pillars[i].width < self.bird.x) and (self.pillars[i].passed):
-                self.score = self.score + 1 
+                self.score = self.score + 1
                 self.pillars[i].passed = False
 
         # check for falling below the ground
@@ -182,7 +184,6 @@ class Game(arcade.Window):
         for pillar in self.pillars:
             pillar.update()
 
-        # updates the bird
         self.bird.update()
 
         self.check_collision()
@@ -196,41 +197,42 @@ class Game(arcade.Window):
         - Sky
         - Ground
         Called 1/60 seconds
-        
+
         """
 
         arcade.start_render()
 
-        self.sky.draw(screen_width/2, screen_height/2, screen_width, screen_height)
-        self.ground.draw(screen_width/2, 0.6*self.pillars[0].ground_height, screen_width, self.pillars[0].ground_height)
+        # draw the background
+        self.sky.draw_sized(screen_width/2, screen_height/2, screen_width, screen_height)
+        self.ground.draw_sized(screen_width/2, 0.6*self.pillars[0].ground_height, screen_width, self.pillars[0].ground_height)
 
         # drawing the pillars
         for pillar in self.pillars:
 
             if pillar.x >= 0:
-                 
+
                 ### ---- Top Pillar ----- ###
-                arcade.draw_lrtb_rectangle_filled(left = pillar.x, right = pillar.x + pillar.width, 
+                arcade.draw_lrtb_rectangle_filled(left = pillar.x, right = pillar.x + pillar.width,
                     top = screen_height, bottom = pillar.gap + pillar.gap_height / 2, color = pillar.color)
-                arcade.draw_lrtb_rectangle_filled(left = pillar.x - 5, right = pillar.x + pillar.width + 5, 
+                arcade.draw_lrtb_rectangle_filled(left = pillar.x - 5, right = pillar.x + pillar.width + 5,
                     top = pillar.gap + pillar.gap_height / 2, bottom = pillar.gap + pillar.gap_height / 2 - 5, color = pillar.color_top)
-                
+
                 ### ---- Bottom Pillar ---- ###
                 arcade.draw_lrtb_rectangle_filled(left = pillar.x, right = pillar.x + pillar.width, top = pillar.gap - pillar.gap_height / 2,
                     bottom = pillar.ground_height, color = pillar.color)
-                arcade.draw_lrtb_rectangle_filled(left = pillar.x - 5, right = pillar.x + pillar.width + 5, top = pillar.gap - pillar.gap_height / 2, 
-                    bottom = pillar.gap - pillar.gap_height / 2 - 5, color = pillar.color_top)    
+                arcade.draw_lrtb_rectangle_filled(left = pillar.x - 5, right = pillar.x + pillar.width + 5, top = pillar.gap - pillar.gap_height / 2,
+                    bottom = pillar.gap - pillar.gap_height / 2 - 5, color = pillar.color_top)
 
         # draw the bird
         if self.bird.flapped:
-            self.bird.texture_flapped.draw(self.bird.x, self.bird.y, self.bird.radius, self.bird.radius)
+            self.bird.texture_flapped.draw_sized(self.bird.x, self.bird.y, self.bird.radius, self.bird.radius)
             self.bird.flapped = False
         else:
-            self.bird.texture.draw(self.bird.x, self.bird.y, self.bird.radius, self.bird.radius)
-        
+            self.bird.texture.draw_sized(self.bird.x, self.bird.y, self.bird.radius, self.bird.radius)
+
         # display the score
         score_display = f"Score: {self.score}"
-        arcade.draw_text(score_display, screen_width/3 , 5/6 * screen_height, arcade.csscolor.WHITE, 18)
+        arcade.draw_text(score_display, screen_width/6 , 5/6 * screen_height, arcade.csscolor.BLACK, 25)
 
 def main():
     game = Game()
